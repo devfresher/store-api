@@ -1,24 +1,69 @@
+import loggerUtil from '@src/utils/logger.util';
 import debug from 'debug';
 import { config } from 'dotenv';
+import Joi from 'joi';
 
 config();
 
 class ServerConfig {
-  public NODE_ENV = process.env.NODE_ENV;
+  public NODE_ENV!: string;
+  public PORT!: number;
+  public DEBUG!: (...args: any[]) => void;
+  public ALLOWED_ORIGINS?: string;
+  public AUTH_SECRET!: string;
+  public BCRYPT_SALT_ROUNDS!: number;
+  public ACCESS_TOKEN_EXPIRES_IN!: string;
+  public DB_URI!: string;
 
-  public PORT = process.env.PORT;
+  private envSchema = Joi.object({
+    NODE_ENV: Joi.string()
+      .valid('development', 'production', 'test')
+      .required(),
+    PORT: Joi.number().default(3000),
+    DB_URI: Joi.string().required(),
+    AUTH_SECRET: Joi.string().required(),
+    BCRYPT_SALT_ROUNDS: Joi.number().default(10),
+    ACCESS_TOKEN_EXPIRES_IN: Joi.string().default('1h'),
+    ALLOWED_ORIGINS: Joi.string().optional(),
+  }).unknown();
 
-  public DEBUG = this.NODE_ENV == 'development' ? debug('dev') : console.log;
+  constructor() {
+    this.validate();
+    this.setDebug();
+  }
 
-  public ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS;
+  /**
+   * Validates the environment variables against the schema.
+   *
+   * It throws an error if the validation fails.
+   *
+   * @throws {Error} If the validation fails.
+   */
+  private validate() {
+    const { error, value: envVars } = this.envSchema.validate(process.env, {
+      abortEarly: false,
+    });
+    if (error) {
+      throw new Error(
+        `Config validation error: ${error.details.map((err) => err.message).join(', ')}`
+      );
+    }
 
-  public AUTH_SECRET = process.env.AUTH_SECRET;
+    Object.assign(this, envVars);
+  }
 
-  public BCRYPT_SALT_ROUNDS = Number(process.env.BCRYPT_SALT_ROUNDS);
-
-  public ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN;
-
-  public DB_URI = process.env.DB_URI;
+  /**
+   * Sets the DEBUG property based on the NODE_ENV.
+   *
+   * If NODE_ENV is 'development', it uses the 'debug' package to log messages.
+   * Otherwise, it uses the loggerUtil.log function.
+   *
+   * @private
+   */
+  private setDebug() {
+    this.DEBUG =
+      this.NODE_ENV === 'development' ? debug('dev') : loggerUtil.log;
+  }
 }
 
 export default new ServerConfig();

@@ -3,7 +3,7 @@ import Joi, { ValidationResult } from 'joi';
 import serverConfig from '@src/config/server.config';
 import { isObjectIdOrHexString, Types } from 'mongoose';
 import loggerUtil from '@src/utils/logger.util';
-import { BadRequestException, SystemException } from '../exceptions';
+import { BadRequestException, SystemException } from '@src/exceptions';
 
 class SystemMiddlewares {
   public errorHandler(): ErrorRequestHandler {
