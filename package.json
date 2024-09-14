@@ -6,8 +6,8 @@
 	"scripts": {
 		"build": "tsc -p . && tsc-alias",
 		"dev": "cross-env DEBUG=app tsnd -r tsconfig-paths/register --respawn --files src/app.ts",
-    "lint": "eslint 'src/**/*.{js,ts}' --fix",
-    "format": "prettier --write 'src/**/*.{js,ts}'",
+		"lint": "eslint 'src/**/*.{js,ts}' --fix",
+		"format": "prettier --write 'src/**/*.{js,ts}'",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [],
@@ -29,6 +29,7 @@
 	"devDependencies": {
 		"@types/compression": "^1.7.5",
 		"@types/cors": "^2.8.17",
+		"@types/debug": "^4.1.12",
 		"@types/express": "^4.17.21",
 		"@types/jsonwebtoken": "^9.0.6",
 		"@types/morgan": "^1.9.9",
