@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import serverConfig from '@src/config/server.config';
 import UserModel from '@src/db/models/user.model';
 import { UserRole } from '@src/interfaces/enum.interface';
+import loggerUtil from '@src/utils/logger.util';
 
 export const seedDB = async () => {
   try {
@@ -11,7 +12,7 @@ export const seedDB = async () => {
     await UserModel.deleteMany({});
     const salt = await bcrypt.genSalt(serverConfig.BCRYPT_SALT_ROUNDS);
 
-    const users = [
+    const usersData = [
       {
         fullName: 'Admin User',
         email: 'admin@example.com',
@@ -26,12 +27,20 @@ export const seedDB = async () => {
       },
     ];
 
-    await UserModel.insertMany(users);
+    const bulkOps = usersData.map((user) => ({
+      updateOne: {
+        filter: { name: user.email },
+        update: { $set: user },
+        upsert: true,
+      },
+    }));
 
-    console.log('Users seeded successfully');
+    await UserModel.insertMany(bulkOps);
+
+    loggerUtil.log('info', 'Users seeded successfully');
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding users:', error);
+    loggerUtil.log('error', `Error seeding users:, ${error}`);
     process.exit(1);
   }
 };

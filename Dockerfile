@@ -8,9 +8,9 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+ARG name
 
-RUN npm run seed
+RUN npm run build
 
 RUN npm prune --production
 
