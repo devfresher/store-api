@@ -10,9 +10,9 @@ COPY . .
 
 RUN npm run build
 
-RUN npm prune --production
-
 RUN npm run seed
+
+RUN npm prune --production
 
 EXPOSE 3000
 
