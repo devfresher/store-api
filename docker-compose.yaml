@@ -8,21 +8,10 @@ services:
       - mongo
     env_file:
       - .env
-    environment:
-      DB_URI: mongodb://mongo:27017/store-api
-      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-      AUTH_SECRET: ${AUTH_SECRET}
-      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS}
-      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
-      TOTP_SECRET_KEY: ${TOTP_SECRET_KEY}
-
   mongo:
     image: mongo
     ports:
-      - '27018:27017'
-
+      - '27017:27017'
   redis:
     image: redis
     ports:
