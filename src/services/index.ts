@@ -1,85 +1,78 @@
-import { FilterQuery, SortOrder } from 'mongoose';
+import mongoose, { FilterQuery } from 'mongoose';
 import { Model } from 'mongoose';
 import { PopulateOptions } from 'mongoose';
 import { ClientSession } from 'mongoose';
 import {
   DocumentWithTimestamps,
   FindAllOption,
-  Id,
   PaginatedResult,
   PaginationMetadata,
   RelationOptions,
 } from '@src/interfaces/core.interface';
 import { ConflictException, NotFoundException } from '@src/exceptions';
 
-abstract class BaseService<T extends DocumentWithTimestamps<T>> {
+abstract class BaseService<T extends DocumentWithTimestamps> {
   constructor(
     private readonly entityName: string = 'Resource',
-    private readonly model: Model<T>
+    protected readonly model: Model<T>
   ) {}
 
-  protected checkLabel = async (userId: Id, label: string): Promise<void> => {
+  protected async checkLabel(label: string): Promise<void> {
     const record: T | null = await this.model.findOne({
-      user: userId,
       label,
     });
 
     if (record) {
-      throw new ConflictException(
-        `${this.entityName} with this name already exists`
-      );
+      throw new ConflictException(`${this.entityName} with this name already exists`);
     }
-  };
+  }
 
-  public count = async (
-    filterQuery: FilterQuery<T>,
-    session?: ClientSession
-  ): Promise<number> => {
+  public async count(filterQuery: FilterQuery<T>, session?: ClientSession): Promise<number> {
     return await this.model.countDocuments(filterQuery, session);
-  };
+  }
 
-  public getAllForService = async (
+  public async getAllForService(
     opts?: FindAllOption<T>,
     session?: ClientSession
-  ): Promise<T[] | PaginatedResult<T>> => {
-    const offset = opts?.pageOpts ? opts?.pageOpts?.offset : 0;
-    const limit = opts?.pageOpts ? opts?.pageOpts?.limit : 10;
+  ): Promise<T[] | PaginatedResult<T>> {
+    const offset = opts?.pageOpts?.offset || 0;
+    const limit = opts?.pageOpts?.limit || 10;
+
+    const isReplicaSet = await this.isReplicaSet();
 
     let items = await this.model.find(opts?.filter || {}, opts?.fields, {
-      ...(offset && limit && { limit, skip: offset }),
+      ...(limit && { limit, skip: offset }),
       populate: opts?.relations,
       sort: {
         ...(opts?.sortBy && { [opts?.sortBy]: opts?.sortOrder }),
       },
-      session,
+      ...(isReplicaSet && { session }),
     });
 
-    if (!(offset && limit)) {
+    if (!limit) {
       return items;
     } else {
       const totalCount = await this.model.countDocuments(opts?.filter || {});
       const pagination = this.paginate(totalCount, offset, limit);
       return { items, pagination };
     }
-  };
+  }
 
-  async get(
-    opts?: FindAllOption<T>,
-    session?: ClientSession
-  ): Promise<T | null> {
+  async get(opts?: FindAllOption<T>, session?: ClientSession): Promise<T | null> {
+    const isReplicaSet = await this.isReplicaSet();
+
     return await this.model.findOne(opts?.filter || {}, opts?.fields, {
       populate: opts?.relations,
-      session,
+      ...(isReplicaSet && { session }),
     });
   }
 
-  async getOrError(
-    opts?: FindAllOption<T>,
-    session?: ClientSession
-  ): Promise<T> {
+  async getOrError(opts?: FindAllOption<T>, session?: ClientSession): Promise<T> {
+    const isReplicaSet = await this.isReplicaSet();
+
     const entity = await this.model.findOne(opts?.filter || {}, opts?.fields, {
       populate: opts?.relations,
-      session,
+      ...(isReplicaSet && { session }),
     });
 
     if (!entity)
@@ -90,12 +83,11 @@ abstract class BaseService<T extends DocumentWithTimestamps<T>> {
     return entity;
   }
 
-  public deleteForService = async (
-    filter: FilterQuery<T>,
-    session?: ClientSession
-  ): Promise<T> => {
+  public async deleteForService(filter: FilterQuery<T>, session?: ClientSession): Promise<T> {
+    const isReplicaSet = await this.isReplicaSet();
+
     const record: T | null = await this.model.findOneAndDelete(filter, {
-      session,
+      ...(isReplicaSet && { session }),
     });
 
     if (!record) {
@@ -103,7 +95,7 @@ abstract class BaseService<T extends DocumentWithTimestamps<T>> {
     }
 
     return record;
-  };
+  }
 
   protected generateRelation<U>(
     path: string,
@@ -117,16 +109,18 @@ abstract class BaseService<T extends DocumentWithTimestamps<T>> {
     };
   }
 
-  private paginate(
-    totalItems: number,
-    offset: number,
-    limit: number
-  ): PaginationMetadata {
+  private paginate(totalItems: number, offset: number, limit: number): PaginationMetadata {
     const totalPages = Math.ceil(totalItems / limit);
     const currentPage = Math.ceil(offset / limit) + 1;
     const itemsPerPage = limit;
 
     return { totalItems, itemsPerPage, currentPage, totalPages };
+  }
+
+  protected async isReplicaSet(): Promise<boolean> {
+    const admin = mongoose.connection?.db?.admin();
+    const result = await admin?.command({ isMaster: 1 });
+    return !!result?.setName;
   }
 }
 

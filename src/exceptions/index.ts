@@ -1,17 +1,7 @@
-import BadRequestException from './badRequest.exception';
-import ConflictException from './conflict.exception';
-import ForbiddenException from './forbidden.exception';
-import InternalServerException from './internalServer.exception';
-import NotFoundException from './notFound.exception';
-import SystemException from './system.exception';
-import UnauthorizedException from './unauthorized.exception';
-
-export {
-  SystemException,
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  InternalServerException,
-  NotFoundException,
-  UnauthorizedException,
-};
+export { BadRequestException } from '@src/exceptions/badRequest.exception';
+export { ConflictException } from '@src/exceptions/conflict.exception';
+export { ForbiddenException } from '@src/exceptions/forbidden.exception';
+export { InternalServerException } from '@src/exceptions/internalServer.exception';
+export { NotFoundException } from '@src/exceptions/notFound.exception';
+export { SystemException } from '@src/exceptions/system.exception';
+export { UnauthorizedException } from '@src/exceptions/unauthorized.exception';

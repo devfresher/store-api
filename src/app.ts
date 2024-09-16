@@ -9,7 +9,7 @@ import DB from '@src/db';
 import routes from '@src/routes';
 import serverConfig from '@src/config/server.config';
 import systemMiddleware from '@src/middleware/system.middleware';
-import loggerUtil from './utils/logger.util';
+import loggerUtil from '@src/utils/logger.util';
 
 class App {
   protected server!: Server;
@@ -18,9 +18,7 @@ class App {
 
   constructor(public app: Application) {
     this.corsOptions = {
-      origin: serverConfig.ALLOWED_ORIGINS
-        ? serverConfig.ALLOWED_ORIGINS.split(',')
-        : '*',
+      origin: serverConfig.ALLOWED_ORIGINS ? serverConfig.ALLOWED_ORIGINS.split(',') : '*',
     };
 
     this.initializeDb();
@@ -57,7 +55,7 @@ class App {
       this.app.use(cors(this.corsOptions));
     }
 
-    this.app.use(json());
+    this.app.use(json({ limit: '10mb' }));
     this.app.use(urlencoded({ extended: false }));
     this.app.use(helmet());
 

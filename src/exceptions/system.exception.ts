@@ -1,4 +1,4 @@
-export default class SystemException extends Error {
+export class SystemException extends Error {
   private _code?: number;
 
   private _errors?: Array<unknown>;
@@ -11,11 +11,7 @@ export default class SystemException extends Error {
     return this._errors;
   }
 
-  constructor(
-    code: number,
-    message: string = 'an error occurred',
-    errors?: Array<unknown>
-  ) {
+  constructor(code: number, message: string = 'an error occurred', errors?: Array<unknown>) {
     super(message); // 'Error' breaks prototype chain here
     this._code = code || 500;
     this.message = message;

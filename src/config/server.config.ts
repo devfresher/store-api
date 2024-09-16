@@ -12,19 +12,19 @@ class ServerConfig {
   public ALLOWED_ORIGINS?: string;
   public AUTH_SECRET!: string;
   public BCRYPT_SALT_ROUNDS!: number;
-  public ACCESS_TOKEN_EXPIRES_IN!: string;
+  public JWT_ACCESS_EXPIRES_IN!: string;
   public DB_URI!: string;
+  public TOTP_SECRET_KEY!: string;
 
-  private envSchema = Joi.object({
-    NODE_ENV: Joi.string()
-      .valid('development', 'production', 'test')
-      .required(),
+  private envSchema = Joi.object<ServerConfig>({
+    NODE_ENV: Joi.string().valid('development', 'production', 'test').required(),
     PORT: Joi.number().default(3000),
     DB_URI: Joi.string().required(),
     AUTH_SECRET: Joi.string().required(),
     BCRYPT_SALT_ROUNDS: Joi.number().default(10),
-    ACCESS_TOKEN_EXPIRES_IN: Joi.string().default('1h'),
+    JWT_ACCESS_EXPIRES_IN: Joi.string().default('1h'),
     ALLOWED_ORIGINS: Joi.string().optional(),
+    TOTP_SECRET_KEY: Joi.string().required(),
   }).unknown();
 
   constructor() {
@@ -61,8 +61,7 @@ class ServerConfig {
    * @private
    */
   private setDebug() {
-    this.DEBUG =
-      this.NODE_ENV === 'development' ? debug('dev') : loggerUtil.log;
+    this.DEBUG = this.NODE_ENV === 'development' ? debug('dev') : loggerUtil.log;
   }
 }
 
