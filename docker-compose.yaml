@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     environment:
-      DB_URI: mongodb://mongo:27017/mydb
+      DB_URI: mongodb://mongo:27017/store-api
       NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
       AUTH_SECRET: ${AUTH_SECRET}
