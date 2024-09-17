@@ -63,11 +63,15 @@ class ProductService extends BaseService<Product> {
   }
 
   async create(authUser: AuthPayload, data: CreateProductDto): Promise<Product> {
-    const category = await categoryService.getById(data.categoryId);
+    // Validate if category exists
+    const category = await categoryService.getOrError({
+      filter: { _id: data.categoryId },
+      optimized: true,
+    });
 
     const product = await this.model.create({
       ...data,
-      categoryId: category.id,
+      categoryId: category._id,
       createdById: authUser.id,
     });
 
@@ -79,7 +83,12 @@ class ProductService extends BaseService<Product> {
     session.startTransaction();
 
     try {
-      if (data.categoryId) await categoryService.getById(data.categoryId);
+      if (data.categoryId) {
+        await categoryService.getOrError({
+          filter: { _id: data.categoryId },
+          optimized: true,
+        });
+      }
 
       const product = await this.getOrError({ filter: { _id: id } }, session);
       Object.assign(product, data);

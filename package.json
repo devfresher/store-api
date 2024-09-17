@@ -9,7 +9,7 @@
     "seed": "tsnd -r tsconfig-paths/register src/seeders/index.ts",
     "lint": "eslint 'src/**/*.{js,ts}' --fix",
     "format": "prettier --write 'src/**/*.{js,ts}'",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start": "node dist/src/app.js"
   },
   "keywords": [],
