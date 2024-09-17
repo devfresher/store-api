@@ -25,12 +25,7 @@ class MeValidatorUtil extends BaseValidator {
       phoneNumber: Joi.string().pattern(this.patterns.phoneNumber).label('Phone Number').messages({
         'string.pattern.base': 'Invalid phone number',
       }),
-      profileImage: Joi.object()
-        .keys({
-          url: Joi.string().uri().required().label('Image Url'),
-          imageId: Joi.string().label('Image Id'),
-        })
-        .label('Profile Image'),
+      profileImage: Joi.string().uri().label('Profile Image'),
     });
 
     return this.validate(schema, req.body);

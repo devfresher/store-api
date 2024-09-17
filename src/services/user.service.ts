@@ -60,7 +60,7 @@ class UserService extends BaseService<User> {
   }
 
   async create(data: CreateUserDto): Promise<User> {
-    const user = await this.get({ filter: { email: data.email } });
+    const user = await this.get({ filter: { email: data.email }, optimized: true });
     if (user) {
       throw new ConflictException('User already exists.');
     }

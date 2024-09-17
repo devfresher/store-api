@@ -48,7 +48,7 @@ class AuthService extends BaseService<User> {
     }
 
     const access_token = this.generateAccessToken(user);
-    await this.updateLastLogin(user.id);
+    await this.updateLastLogin(user._id);
 
     return { user, access_token };
   }
@@ -62,7 +62,7 @@ class AuthService extends BaseService<User> {
   }
 
   public async forgotPassword(email: string): Promise<User> {
-    const user = await this.get({ filter: { email } });
+    const user = await this.get({ filter: { email }, optimized: true });
 
     if (!user) {
       throw new NotFoundException(`User with email '${email}' does not exist.`);
@@ -86,6 +86,7 @@ class AuthService extends BaseService<User> {
   public async resetPassword(data: ResetPasswordDto): Promise<User> {
     const user = await userService.getOrError({
       filter: { email: data.email },
+      optimized: true,
     });
 
     const isValid = helperUtil.verifyOtp(data.otp, 5);

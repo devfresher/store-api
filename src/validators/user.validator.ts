@@ -9,7 +9,7 @@ class UserValidator extends BaseValidator {
       fullName: Joi.string().required().label('Full Name'),
       email: Joi.string().email().required().label('Email'),
       phoneNumber: Joi.string().label('Phone Number'),
-      profileImage: Joi.string().label('Profile Image'),
+      profileImage: Joi.string().uri().label('Profile Image'),
       password: Joi.string().min(8).required().label('Password'),
       role: Joi.string()
         .valid(...Object.values(UserRole))

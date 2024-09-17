@@ -17,12 +17,19 @@ abstract class BaseService<T extends DocumentWithTimestamps> {
     protected readonly model: Model<T>
   ) {}
 
+  /**
+   * Checks if a document with the given label already exists.
+   *
+   * @throws {ConflictException} If a document with the given label already exists.
+   * @param label The label to check.
+   * @returns A promise that resolves if no document with the given label exists.
+   */
   protected async checkLabel(label: string): Promise<void> {
-    const record: T | null = await this.model.findOne({
+    const recordCount = await this.model.countDocuments({
       label,
     });
 
-    if (record) {
+    if (recordCount > 0) {
       throw new ConflictException(`${this.entityName} with this name already exists`);
     }
   }
@@ -31,6 +38,16 @@ abstract class BaseService<T extends DocumentWithTimestamps> {
     return await this.model.countDocuments(filterQuery, session);
   }
 
+  /**
+   * Retrieves all records of the model, with optional pagination, filtering and relations.
+   *
+   * If `pageOpts.limit` is not provided, all records will be returned without pagination.
+   *
+   * If `session` is provided, the query will be executed within the session.
+   *
+   * @throws {ConflictException} If a document with the given label already exists.
+   * @returns A promise that resolves with either an array of records or a paginated result.
+   */
   public async getAllForService(
     opts?: FindAllOption<T>,
     session?: ClientSession
@@ -42,7 +59,8 @@ abstract class BaseService<T extends DocumentWithTimestamps> {
 
     let items = await this.model.find(opts?.filter || {}, opts?.fields, {
       ...(limit && { limit, skip: offset }),
-      populate: opts?.relations,
+      populate: opts?.optimized === true ? [] : opts?.relations,
+      lean: opts?.optimized,
       sort: {
         ...(opts?.sortBy && { [opts?.sortBy]: opts?.sortOrder }),
       },
@@ -62,8 +80,9 @@ abstract class BaseService<T extends DocumentWithTimestamps> {
     const isReplicaSet = await this.isReplicaSet();
 
     return await this.model.findOne(opts?.filter || {}, opts?.fields, {
-      populate: opts?.relations,
+      populate: opts?.optimized === true ? [] : opts?.relations,
       ...(isReplicaSet && { session }),
+      lean: opts?.optimized,
     });
   }
 
@@ -71,8 +90,9 @@ abstract class BaseService<T extends DocumentWithTimestamps> {
     const isReplicaSet = await this.isReplicaSet();
 
     const entity = await this.model.findOne(opts?.filter || {}, opts?.fields, {
-      populate: opts?.relations,
+      populate: opts?.optimized === true ? [] : opts?.relations,
       ...(isReplicaSet && { session }),
+      lean: opts?.optimized,
     });
 
     if (!entity)
